@@ -10,6 +10,9 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.http.HttpStatus
 import org.springframework.web.server.ResponseStatusException
 import spock.lang.Specification
+import spock.lang.Unroll
+
+import static com.bowling.bowlingscore.jpa.FrameEntity.TOTAL_PINS
 
 @SpringBootTest
 class BowlingSpec extends Specification {
@@ -53,7 +56,7 @@ class BowlingSpec extends Specification {
         when:
         int firstScore = aRandom.nextInt(4)
         int secondScore = aRandom.nextInt(4)
-        int thirdScore = aRandom.nextInt(4)
+        int thirdScore = aRandom.nextInt(10)
         bowlingResource.score(game.id, firstScore)
         bowlingResource.score(game.id, secondScore)
         bowlingResource.score(game.id, thirdScore)
@@ -74,8 +77,8 @@ class BowlingSpec extends Specification {
         Game game = bowlingResource.createGame()
 
         when:
-        int firstScore = aRandom.nextInt(10)
-        int secondScore = 10 - firstScore
+        int firstScore = aRandom.nextInt(TOTAL_PINS)
+        int secondScore = TOTAL_PINS - firstScore
         bowlingResource.score(game.id, firstScore)
         bowlingResource.score(game.id, secondScore)
 
@@ -93,17 +96,41 @@ class BowlingSpec extends Specification {
         Game game = bowlingResource.createGame()
 
         when:
-        bowlingResource.score(game.id, 10)
-        bowlingResource.score(game.id, 10)
+        bowlingResource.score(game.id, TOTAL_PINS)
+        bowlingResource.score(game.id, TOTAL_PINS)
 
         then:
         FrameEntity result1 = frameRepository.findById(game.getFrames()[0].id).get()
         FrameEntity result2 = frameRepository.findById(game.getFrames()[0].id).get()
-        result1.firstShot == 10
-        result1.getScore() == 10
+        result1.firstShot == TOTAL_PINS
+        result1.getScore() == TOTAL_PINS
         result1.isStrike() == true
-        result2.firstShot == 10
-        result2.getScore() == 10
+        result2.firstShot == TOTAL_PINS
+        result2.getScore() == TOTAL_PINS
         result2.isStrike() == true
+    }
+
+    @Unroll
+    def 'Should be able to score bonus frames'() {
+        given:
+        Game game = bowlingResource.createGame()
+        9.times { bowlingResource.score(game.id, TOTAL_PINS) }
+
+        when:
+        bowlingResource.score(game.id, firstRoll)
+        bowlingResource.score(game.id, secondRoll)
+        bowlingResource.score(game.id, thirdRoll)
+
+        then:
+        FrameEntity lastFrame = frameRepository.findById(game.getFrames()[9].id).get()
+        FrameEntity bonusFrame = frameRepository.findById(game.getFrames()[10].id).get()
+        lastFrame.getScore() + bonusFrame.getScore() == totalScore
+
+        where:
+        firstRoll | secondRoll | thirdRoll | totalScore
+        10        | 5          | 5         | 20
+        8         | 2          | 7         | 17
+        10        | 10         | 10        | 30
+        2         | 5          | 10        | 7
     }
 }
