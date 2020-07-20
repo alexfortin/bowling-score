@@ -17,6 +17,7 @@ import java.util.UUID;
 public class BowlingService {
     public static final int TOTAL_FRAMES = 11; // 10 frames plus bonus frame
     public static final ResponseStatusException NOT_FOUND_EXCEPTION = new ResponseStatusException(HttpStatus.NOT_FOUND, "Game not found", null);
+    public static final ResponseStatusException BAD_REQUEST_EXCEPTION = new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid score", null);
 
     @Autowired
     GameRepository gameRepository;
@@ -48,6 +49,7 @@ public class BowlingService {
 
     private void scoreFrame(GameEntity gameEntity, int score) {
         FrameEntity scoringFrame = gameEntity.getCurrentFrame();
+        assertValidScore(scoringFrame);
         if (gameEntity.isFinalFrame()) {
             scoreFinalFrame(gameEntity.getFrames(), scoringFrame, score);
         } else {
@@ -58,6 +60,14 @@ public class BowlingService {
         }
         gameEntity.setFinalScore(recalculateScore(gameEntity.getFrames()));
         gameRepository.save(gameEntity);
+    }
+
+    private void assertValidScore(FrameEntity scoringFrame, int score) {
+        if (score < 0 || score > 10) {
+            if (scoringFrame.getNumber() < 10 && scoringFrame.getScore() + score > 10) {
+                throw BAD_REQUEST_EXCEPTION;
+            }
+        }
     }
 
     private FrameEntity scoreFinalFrame(List<FrameEntity> frames, FrameEntity finalFrame, int score) {

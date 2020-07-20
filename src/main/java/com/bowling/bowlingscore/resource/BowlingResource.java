@@ -24,18 +24,34 @@ public class BowlingResource {
 
     Mapper mapper = DozerBeanMapperBuilder.create().build();
 
+    /**
+     *
+     * @param id
+     * @return game for given id. If game with id is not found, will return 404 Not Found Exception
+     */
     @GetMapping("/game/{id}")
     public Game getGame(@PathVariable(value = "id") UUID id) {
         GameEntity gameEntity = bowlingService.getGame(id);
         return mapper.map(gameEntity, Game.class);
     }
 
+    /**
+     *
+     * @return intializes a bowling game with all frames. Returns newly created game.
+     */
     @PostMapping("/game")
     public Game createGame() {
         GameEntity gameEntity = bowlingService.createGame();
         return mapper.map(gameEntity, Game.class);
     }
 
+    /**
+     *
+     * @param id
+     * @param score
+     * @return This endpoint is used to score points. Score must be a positive int, cannot exceed 10, and both combined rolls on a frame must not exceed 10.
+     * Returns new state of game after score is recorded.
+     */
     @PostMapping("/game/{id}/score")
     public Game score(@PathVariable(value = "id") UUID id, @RequestParam() int score) {
         GameEntity gameEntity = bowlingService.score(id, score);
