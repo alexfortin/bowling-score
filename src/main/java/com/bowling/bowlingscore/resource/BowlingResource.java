@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.UUID;
@@ -24,7 +25,7 @@ public class BowlingResource {
     Mapper mapper = DozerBeanMapperBuilder.create().build();
 
     @GetMapping("/game/{id}")
-    public Game getGame(@PathVariable(value="id") UUID id) {
+    public Game getGame(@PathVariable(value = "id") UUID id) {
         GameEntity gameEntity = bowlingService.getGame(id);
         return mapper.map(gameEntity, Game.class);
     }
@@ -32,6 +33,12 @@ public class BowlingResource {
     @PostMapping("/game")
     public Game createGame() {
         GameEntity gameEntity = bowlingService.createGame();
+        return mapper.map(gameEntity, Game.class);
+    }
+
+    @PostMapping("/game/{id}/score")
+    public Game score(@PathVariable(value = "id") UUID id, @RequestParam() int score) {
+        GameEntity gameEntity = bowlingService.score(id, score);
         return mapper.map(gameEntity, Game.class);
     }
 }
