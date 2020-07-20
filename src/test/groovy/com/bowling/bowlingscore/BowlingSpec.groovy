@@ -2,11 +2,12 @@ package com.bowling.bowlingscore
 
 import com.bowling.bowlingscore.api.Game
 import com.bowling.bowlingscore.jpa.FrameRepository
-import com.bowling.bowlingscore.jpa.GameEntity
 import com.bowling.bowlingscore.jpa.GameRepository
 import com.bowling.bowlingscore.resource.BowlingResource
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.http.HttpStatus
+import org.springframework.web.server.ResponseStatusException
 import spock.lang.Specification
 
 @SpringBootTest
@@ -24,10 +25,21 @@ class BowlingSpec extends Specification {
         given:
         Game game = bowlingResource.createGame()
 
-        expect:
-        GameEntity result = gameRepository.findById(game.id).get()
+        when:
+        Game result = bowlingResource.getGame(game.id)
+
+        then:
         result.id == game.id
         result.finalScore == 0
         result.frames.size() == 10
+    }
+
+    def 'Should get a not found exception when requesting a game that doesnt exist'() {
+        when:
+        bowlingResource.getGame(UUID.randomUUID())
+
+        then:
+        ResponseStatusException ex = thrown(ResponseStatusException)
+        ex.status == HttpStatus.NOT_FOUND
     }
 }
