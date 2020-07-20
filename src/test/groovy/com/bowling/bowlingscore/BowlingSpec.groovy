@@ -3,6 +3,7 @@ package com.bowling.bowlingscore
 import com.bowling.bowlingscore.api.Game
 import com.bowling.bowlingscore.jpa.FrameEntity
 import com.bowling.bowlingscore.jpa.FrameRepository
+import com.bowling.bowlingscore.jpa.GameEntity
 import com.bowling.bowlingscore.jpa.GameRepository
 import com.bowling.bowlingscore.resource.BowlingResource
 import org.springframework.beans.factory.annotation.Autowired
@@ -37,7 +38,7 @@ class BowlingSpec extends Specification {
         then:
         result.id == game.id
         result.finalScore == 0
-        result.frames.size() == 10
+        result.frames.size() == 11
     }
 
     def 'Should get a not found exception when requesting a game that doesnt exist'() {
@@ -132,5 +133,59 @@ class BowlingSpec extends Specification {
         8         | 2          | 7         | 17
         10        | 10         | 10        | 30
         2         | 5          | 10        | 7
+    }
+
+    def 'Should calculate perfect game score'() {
+        given:
+        Game game = bowlingResource.createGame()
+
+        when:
+        12.times { bowlingResource.score(game.id, TOTAL_PINS) }
+
+        then:
+        GameEntity result = gameRepository.findById(game.id).get()
+        result.finalScore == 300
+    }
+
+    def 'Should calculate game score for single bowl'() {
+        given:
+        Game game = bowlingResource.createGame()
+
+        when:
+        int score = aRandom.nextInt(9)
+        bowlingResource.score(game.id, score)
+
+        then:
+        GameEntity result = gameRepository.findById(game.id).get()
+        result.finalScore == score
+    }
+
+    def 'Should calculate game score for full game with strikes and spares'() {
+        given:
+        Game game = bowlingResource.createGame()
+
+        when:
+        bowlingResource.score(game.id, 10)
+        bowlingResource.score(game.id, 10)
+        bowlingResource.score(game.id, 3)
+        bowlingResource.score(game.id, 7)
+        bowlingResource.score(game.id, 3)
+        bowlingResource.score(game.id, 5)
+        bowlingResource.score(game.id, 8)
+        bowlingResource.score(game.id, 2)
+        bowlingResource.score(game.id, 5)
+        bowlingResource.score(game.id, 5)
+        bowlingResource.score(game.id, 4)
+        bowlingResource.score(game.id, 0)
+        bowlingResource.score(game.id, 0)
+        bowlingResource.score(game.id, 0)
+        bowlingResource.score(game.id, 10)
+        bowlingResource.score(game.id, 10)
+        bowlingResource.score(game.id, 10)
+        bowlingResource.score(game.id, 10)
+
+        then:
+        GameEntity result = gameRepository.findById(game.id).get()
+        result.finalScore == 157
     }
 }
