@@ -46,6 +46,14 @@ public class FrameEntity {
         return ObjectUtils.defaultIfNull(secondShot, 0);
     }
 
+    public boolean hasFirstShot() {
+        return firstShot != null;
+    }
+
+    public boolean hasSecondShot() {
+        return secondShot != null;
+    }
+
     public void score(int score) {
         if (firstShot == null) {
             firstShot = score;

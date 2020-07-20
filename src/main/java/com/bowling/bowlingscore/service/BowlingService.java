@@ -41,7 +41,6 @@ public class BowlingService {
     }
 
     public GameEntity score(UUID id, int score) {
-        // assert not last frame
         GameEntity gameEntity = getGame(id);
         scoreFrame(gameEntity, score);
         return gameEntity;
@@ -57,18 +56,54 @@ public class BowlingService {
             }
             scoringFrame.score(score);
         }
+        gameEntity.setFinalScore(recalculateScore(gameEntity.getFrames()));
         gameRepository.save(gameEntity);
     }
 
-    private FrameEntity scoreFinalFrame(List<FrameEntity> frames, FrameEntity currentFrame, int score) {
-        if (currentFrame.getFirstShot() == null) {
-            currentFrame.setFirstShot(score);
-        } else if (currentFrame.getSecondShot() == null) {
-            currentFrame.setSecondShot(score);
-        } else if(currentFrame.isStrike() || currentFrame.isSpare()) {
-           currentFrame = frames.get(10);
-           currentFrame.setFirstShot(score);
+    private FrameEntity scoreFinalFrame(List<FrameEntity> frames, FrameEntity finalFrame, int score) {
+        if (finalFrame.hasFirstShot() == false) {
+            finalFrame.setFirstShot(score);
+        } else if (finalFrame.hasSecondShot() == false && finalFrame.isStrike() == false) {
+            finalFrame.setSecondShot(score);
+        } else if (finalFrame.isSpare() || finalFrame.isStrike() || finalFrame.getSecondShot() == FrameEntity.TOTAL_PINS) {
+            finalFrame = frames.get(10);
+            finalFrame.score(score);
         }
-        return currentFrame;
+        return finalFrame;
+    }
+
+    private int recalculateScore(List<FrameEntity> frames) {
+        int finalScore = 0;
+        for (int i = 0; i < 10; i++) {
+            FrameEntity frameEntity = frames.get(i);
+            if (frameEntity.isStrike()) {
+                finalScore += calculateStrikeScore(frames, i);
+            } else if (frameEntity.isSpare()) {
+                finalScore += calculateSpare(frames, i);
+            } else {
+                finalScore += frameEntity.getScore();
+            }
+        }
+        return finalScore;
+    }
+
+    private int calculateSpare(List<FrameEntity> frames, int frameIndex) {
+        FrameEntity frameEntity = frames.get(frameIndex);
+        FrameEntity nextFrameEntity = frames.get(frameIndex + 1);
+        return frameEntity.getScore() + nextFrameEntity.getFirstShot();
+    }
+
+    private int calculateStrikeScore(List<FrameEntity> frames, int frameIndex) {
+        FrameEntity frameEntity = frames.get(frameIndex);
+        int score = frameEntity.getScore();
+        FrameEntity nextFrameEntity = frames.get(frameIndex + 1);
+        if (nextFrameEntity.isStrike() && frameIndex < 9) {
+            score += nextFrameEntity.getScore();
+            FrameEntity thirdFrame = frames.get(frameIndex + 2);
+            score += thirdFrame.getFirstShot();
+        } else {
+            score += nextFrameEntity.getScore();
+        }
+        return score;
     }
 }
