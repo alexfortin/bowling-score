@@ -23,6 +23,8 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 public class FrameEntity {
+    public static final int TOTAL_PINS = 10;
+
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     UUID id;
@@ -37,10 +39,11 @@ public class FrameEntity {
     GameEntity gameEntity;
 
     public Integer getFirstShot() {
-        if (firstShot == null) {
-            return 0;
-        }
-        return firstShot;
+        return ObjectUtils.defaultIfNull(firstShot, 0);
+    }
+
+    public Integer getSecondShot() {
+        return ObjectUtils.defaultIfNull(secondShot, 0);
     }
 
     public void score(int score) {
@@ -52,19 +55,19 @@ public class FrameEntity {
     }
 
     public int getScore() {
-        return ObjectUtils.defaultIfNull(firstShot, 0) + ObjectUtils.defaultIfNull(secondShot, 0);
+        return getFirstShot() + getSecondShot();
     }
 
     public boolean isComplete() {
-        return firstShot != null && (isStrike() || secondShot != null);
+        return (firstShot != null && secondShot != null) || isStrike();
     }
 
     public boolean isSpare() {
-        return firstShot != null && secondShot != null && firstShot + secondShot == 10;
+        return firstShot != null && secondShot != null && firstShot + secondShot == TOTAL_PINS;
     }
 
     public boolean isStrike() {
-        return firstShot != null && firstShot == 10;
+        return firstShot != null && firstShot == TOTAL_PINS;
     }
 }
 

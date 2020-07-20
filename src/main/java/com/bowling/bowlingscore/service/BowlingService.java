@@ -15,7 +15,7 @@ import java.util.UUID;
 
 @Component
 public class BowlingService {
-    public static final int TOTAL_FRAMES = 10;
+    public static final int TOTAL_FRAMES = 11; // 10 frames plus bonus frame
     public static final ResponseStatusException NOT_FOUND_EXCEPTION = new ResponseStatusException(HttpStatus.NOT_FOUND, "Game not found", null);
 
     @Autowired
@@ -49,11 +49,26 @@ public class BowlingService {
 
     private void scoreFrame(GameEntity gameEntity, int score) {
         FrameEntity scoringFrame = gameEntity.getCurrentFrame();
-        if (scoringFrame.isComplete()) {
-            scoringFrame = gameEntity.getNextFrame();
+        if (gameEntity.isFinalFrame()) {
+            scoreFinalFrame(gameEntity.getFrames(), scoringFrame, score);
+        } else {
+            if (scoringFrame.isComplete()) {
+                scoringFrame = gameEntity.getNextFrame();
+            }
+            scoringFrame.score(score);
         }
-        scoringFrame.score(score);
         gameRepository.save(gameEntity);
-//        frameRepository.save(scoringFrame);
+    }
+
+    private FrameEntity scoreFinalFrame(List<FrameEntity> frames, FrameEntity currentFrame, int score) {
+        if (currentFrame.getFirstShot() == null) {
+            currentFrame.setFirstShot(score);
+        } else if (currentFrame.getSecondShot() == null) {
+            currentFrame.setSecondShot(score);
+        } else if(currentFrame.isStrike() || currentFrame.isSpare()) {
+           currentFrame = frames.get(10);
+           currentFrame.setFirstShot(score);
+        }
+        return currentFrame;
     }
 }
