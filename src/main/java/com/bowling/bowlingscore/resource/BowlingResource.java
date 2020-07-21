@@ -37,7 +37,7 @@ public class BowlingResource {
 
     /**
      *
-     * @return intializes a bowling game with all frames. Returns newly created game.
+     * @return initializes a bowling game with all frames. Returns newly created game.
      */
     @PostMapping("/game")
     public Game createGame() {
@@ -50,6 +50,7 @@ public class BowlingResource {
      * @param id
      * @param score
      * @return This endpoint is used to score points. Score must be a positive int, cannot exceed 10, and both combined rolls on a frame must not exceed 10.
+     * You do not need to specify the frame the score goes to, the service figures it out for you.
      * Returns new state of game after score is recorded.
      */
     @PostMapping("/game/{id}/score")

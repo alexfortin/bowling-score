@@ -49,7 +49,7 @@ public class BowlingService {
 
     private void scoreFrame(GameEntity gameEntity, int score) {
         FrameEntity scoringFrame = gameEntity.getCurrentFrame();
-        assertValidScore(scoringFrame);
+        assertValidScore(score);
         if (gameEntity.isFinalFrame()) {
             scoreFinalFrame(gameEntity.getFrames(), scoringFrame, score);
         } else {
@@ -62,11 +62,9 @@ public class BowlingService {
         gameRepository.save(gameEntity);
     }
 
-    private void assertValidScore(FrameEntity scoringFrame, int score) {
+    private void assertValidScore(int score) {
         if (score < 0 || score > 10) {
-            if (scoringFrame.getNumber() < 10 && scoringFrame.getScore() + score > 10) {
-                throw BAD_REQUEST_EXCEPTION;
-            }
+            throw BAD_REQUEST_EXCEPTION;
         }
     }
 
